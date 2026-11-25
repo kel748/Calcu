@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>DSA Advanced Calculator</title>
+<style>
+:root{--bg:#000;--fg:#fff;--sub:#8e8e93;--num:#333336;--numfg:#fff;--top:#a5a5a8;--topfg:#000;--op:#ff9f0a;--opfg:#fff;--sci:#262628;--line:#2c2c2e;--err:#ff6b61}
+:root[data-theme=light]{--bg:#fff;--fg:#000;--sub:#8e8e93;--num:#e9e9ec;--numfg:#000;--top:#d4d4d9;--topfg:#000;--sci:#f1f1f4;--line:#e5e5ea;--err:#d70015}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;padding:16px 14px 40px}
+main{width:100%;max-width:760px}
+main.basic{max-width:420px}
+main.basic .adv-only{display:none}
+main:not(.basic) .main .k{aspect-ratio:auto;height:56px;border-radius:28px;font-size:26px}
+main:not(.basic) .main .k.op{font-size:30px}
+.k.mode{font-size:13px;font-weight:700;line-height:1.05}
+.k.mode span{display:inline-block;border:2px solid currentColor;border-radius:7px;padding:4px 6px}
+main:not(.basic) .display{min-height:110px}
+main:not(.basic) .main .k{height:52px;border-radius:26px}
+main:not(.basic) .s{height:40px;border-radius:20px}
+main .main .k.mode{font-size:12px;line-height:1.1}
+.k.mode span{padding:3px 5px}
+.topbar{display:flex;justify-content:flex-end;margin-bottom:4px}
+.sci[hidden]{display:none}
+html{-webkit-text-size-adjust:100%}
+button,summary{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button{font:inherit;border:0;cursor:pointer;color:var(--fg);background:var(--num)}
+button:active{filter:brightness(1.35)}
+button:focus-visible,.vars input:focus-visible,summary:focus-visible{outline:2px solid var(--op);outline-offset:2px}
+.display{padding:8px 6px 14px;text-align:right;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;user-select:none;-webkit-user-select:none}
+#prev{color:var(--sub);font-size:22px;min-height:30px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+#prev.err{color:var(--err);font-size:17px;white-space:normal;line-height:1.3}
+#inp{font-weight:300;font-size:64px;line-height:1.15;letter-spacing:-1px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+#inp::-webkit-scrollbar,#prev::-webkit-scrollbar{display:none}
+.pads{display:flex;flex-direction:column;gap:12px}
+.main{order:2;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sci{order:1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.k{aspect-ratio:1;border-radius:50%;font-size:30px;font-weight:400;background:var(--num);color:var(--numfg)}
+.k.top{background:var(--top);color:var(--topfg)}
+.k.op{background:var(--op);color:var(--opfg);font-size:36px}
+.k.wide{grid-column:span 2;aspect-ratio:auto;border-radius:999px;text-align:left;padding-left:8%}
+.s{height:44px;border-radius:22px;font-size:16px;background:var(--sci);color:var(--fg)}
+details{border-top:1px solid var(--line);margin-top:16px;padding-top:10px}
+summary{cursor:pointer;font-weight:600;padding:4px 0}
+.vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:10px}
+.vars label{display:flex;align-items:center;gap:8px;font-weight:600}
+.vars input{font-size:16px;width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--sci);color:var(--fg);font:inherit}
+.hint{color:var(--sub);font-size:14px;margin:8px 0 0}
+code{background:var(--sci);padding:1px 6px;border-radius:6px;font-size:13px}
+.pill{display:inline-flex;gap:2px;background:var(--sci);border-radius:999px;padding:4px}
+.pill button{width:46px;height:46px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;color:var(--fg)}
+.pill button.on{color:var(--op)}
+.pads[hidden],#histView[hidden]{display:none}
+main.histopen{max-width:420px}
+main.histopen .adv-only{display:none}
+#histView{display:grid;grid-template-columns:1fr 78px;gap:0 14px}
+#hlist{height:min(50vh,440px);overflow-y:auto;scrollbar-width:thin}
+.hitem{padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.hitem small{display:block;color:var(--sub);font-size:15px;overflow-x:auto;white-space:nowrap}
+.hitem b{display:block;font-weight:400;font-size:24px;overflow-x:auto;white-space:nowrap}
+.hempty{color:var(--sub);padding:14px 4px}
+#hside{display:grid;grid-template-rows:repeat(5,78px);gap:12px;align-content:end}
+#hside .k{width:78px}
+#hbottom{grid-column:1 / 3;display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+#hbottom .r{display:flex;gap:14px;align-items:center}
+.hb{width:50px;height:50px;border-radius:50%;background:var(--sci);color:var(--fg);display:flex;align-items:center;justify-content:center}
+#hbottom .k{width:78px;height:78px}
+</style>
+</head>
+<body>
+<main class="basic">
+<div class="topbar"><div class="pill"><button id="histBtn" aria-label="Show history" title="History"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button id="theme" aria-label="Switch between dark and light mode" title="Dark / light"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></div></div>
+<div class="display">
+  <div id="prev" aria-live="polite"></div>
+  <div id="inp" aria-label="Formula and answer">0</div>
+</div>
+
+<div class="pads">
+  <div class="main" id="main"></div>
+  <div class="sci" id="sci" hidden></div>
+</div>
+
+<div id="histView" hidden>
+  <div id="hlist"></div>
+  <div id="hside">
+    <button class="k top" data-i="BS">⌫</button>
+    <button class="k op" data-i="/">÷</button>
+    <button class="k op" data-i="*">×</button>
+    <button class="k op" data-i="-">−</button>
+    <button class="k op" data-i="+">+</button>
+  </div>
+  <div id="hbottom">
+    <button class="hb" data-i="HBACK" aria-label="Back to keypad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5M11 6l-6 6 6 6"/></svg></button>
+    <div class="r"><button class="hb" data-i="HCLR" aria-label="Clear history"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button><button class="k op" data-i="EQ">=</button></div>
+  </div>
+</div>
+
+<details class="adv-only">
+  <summary>Variables</summary>
+  <p class="hint">Type a value here, or on the keypad press <code>A</code>, <code>set</code>, <code>5</code>, then <code>=</code>.</p>
+  <div class="vars" id="vars"></div>
+</details>
+<details class="adv-only">
+  <summary>Syntax help</summary>
+  <p class="hint"><code>sum(i,1,5,i)</code> Σ &middot; <code>prod(i,1,4,i)</code> Π &middot; <code>dsum(i,1,3,j,1,3,i*j)</code> ΣΣ &middot; <code>dprod(i,1,3,j,1,3,i+j)</code> ΠΠ &middot; <code>5!</code> &middot; <code>2^10</code> &middot; <code>sqrt(16)</code> &middot; <code>cbrt(27)</code> &middot; <code>log(100)</code> &middot; <code>log2(8)</code> &middot; <code>floor(2.7)</code> &middot; <code>ceil(2.1)</code> &middot; <code>7%3</code> &middot; <code>7//2</code> &middot; <code>xy</code> &middot; <code>3x</code> &middot; <code>x^y</code></p>
+</details>
+</main>
+
+<script>
+/* ================= ENGINE =================
+   Pipeline: text -> tokenize() -> parse() (recursive descent, builds an AST)
+   -> ev() (walks the AST). No eval() is used anywhere. */
+
+// function name -> argument count
+const FUNCS = {sqrt:1, cbrt:1, log:1, lb:1, ln:1, floor:1, ceil:1, abs:1, idiv:2, mod:2, sum:4, prod:4, dsum:7, dprod:7};
+const MAX_ITER = 2000000;
+
+function tokenize(s){
+  s = s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/√/g,'sqrt').replace(/∛/g,'cbrt')
+       .replace(/Σ/g,'sum').replace(/Π/g,'prod').replace(/log2/gi,'lb');
+  const t = []; let i = 0;
+  while(i < s.length){
+    const c = s[i];
+    if(/\s/.test(c)){ i++; continue; }
+    if(/[0-9.]/.test(c)){
+      const m = s.slice(i).match(/^(\d+\.?\d*|\.\d+)/);
+      if(!m) throw Error('Invalid number');
+      t.push({t:'num', v:parseFloat(m[0])}); i += m[0].length; continue;
+    }
+    if(/[a-z]/i.test(c)){
+      const w = s.slice(i).match(/^[a-z]+/i)[0].toLowerCase();
+      let p = 0;
+      while(p < w.length){            // split a word into functions / single-letter variables
+        let best = '';
+        for(const f in FUNCS) if(w.startsWith(f,p) && f.length > best.length) best = f;
+        if(best){ t.push({t:'fn', v:best}); p += best.length; }
+        else { t.push({t:'var', v:w[p].toUpperCase()}); p++; }
+      }
+      i += w.length; continue;
+    }
+    if(s.startsWith('//',i)){ t.push({t:'op', v:'//'}); i += 2; continue; }
+    if('+-*/%^!(),'.includes(c)){ t.push({t:'op', v:c}); i++; continue; }
+    throw Error('Unknown symbol "' + c + '"');
+  }
+  return t;
+}
+
+function parse(t){
+  let p = 0;
+  const peek = () => t[p], next = () => t[p++];
+  const isOp = v => peek() && peek().t === 'op' && peek().v === v;
+  const startsOperand = () => { const k = peek(); return k && (k.t==='num' || k.t==='var' || k.t==='fn' || (k.t==='op' && k.v==='(')); };
+
+  function expr(){                                   // + -
+    let l = term();
+    while(isOp('+') || isOp('-')){ const o = next().v; l = {k:'bin', o, l, r:term()}; }
+    return l;
+  }
+  function term(){                                   // * / % // and implicit multiplication (xy, 3x)
+    let l = unary();
+    for(;;){
+      const k = peek(); if(!k) break;
+      if(k.t==='op' && ['*','/','%','//'].includes(k.v)){ next(); l = {k:'bin', o:k.v, l, r:unary()}; }
+      else if(startsOperand()) l = {k:'bin', o:'*', l, r:unary()};
+      else break;
+    }
+    return l;
+  }
+  function unary(){
+    if(isOp('-')){ next(); return {k:'neg', a:unary()}; }
+    if(isOp('+')){ next(); return unary(); }
+    return power();
+  }
+  function power(){                                  // ^ (right associative)
+    const b = post();
+    if(isOp('^')){ next(); return {k:'bin', o:'^', l:b, r:unary()}; }
+    return b;
+  }
+  function post(){                                   // factorial !
+    let a = primary();
+    while(isOp('!')){ next(); a = {k:'fact', a}; }
+    return a;
+  }
+  function primary(){
+    const k = next();
+    if(!k) throw Error('Incomplete expression');
+    if(k.t==='num') return {k:'num', v:k.v};
+    if(k.t==='var') return {k:'var', n:k.v};
+    if(k.t==='op' && k.v==='('){
+      const e = expr();
+      if(!isOp(')')) throw Error('Missing closing parenthesis');
+      next(); return e;
+    }
+    if(k.t==='fn'){
+      if(!isOp('(')) throw Error(k.v + ' needs parentheses, e.g. ' + k.v + '(...)');
+      next();
+      const a = [];
+      if(!isOp(')')){ do { a.push(expr()); } while(isOp(',') && next()); }
+      if(!isOp(')')) throw Error('Missing closing parenthesis');
+      next();
+      if(a.length !== FUNCS[k.v]) throw Error(k.v + ' needs ' + FUNCS[k.v] + ' value(s), got ' + a.length);
+      return {k:'fn', n:k.v, a};
+    }
+    throw Error('Unexpected "' + k.v + '"');
+  }
+
+  if(!t.length) throw Error('Enter a formula');
+  const tree = expr();
+  if(p < t.length) throw Error('Unexpected "' + t[p].v + '"');
+  return tree;
+}
+
+function factorial(n){                               // iterative n!
+  if(!Number.isInteger(n) || n < 0) throw Error('Factorial needs a whole number ≥ 0');
+  if(n > 170) throw Error('Factorial too large (max 170!)');
+  let r = 1; for(let i = 2; i <= n; i++) r *= i;
+  return r;
+}
+
+function aggregate(a, env, isSum, dbl){             // Σ, ΣΣ, Π, ΠΠ
+  const specs = dbl ? [a.slice(0,3), a.slice(3,6)] : [a.slice(0,3)];
+  const body = a[a.length-1]; let count = 0;
+  const run = (d, e) => {
+    if(d === specs.length){ if(++count > MAX_ITER) throw Error('Range too large'); return ev(body, e); }
+    const [v, lo, hi] = specs[d];
+    if(v.k !== 'var') throw Error('Index must be a single letter, e.g. i');
+    const L = ev(lo, e), H = ev(hi, e);
+    if(!Number.isInteger(L) || !Number.isInteger(H)) throw Error('Bounds must be whole numbers');
+    if(H - L > MAX_ITER) throw Error('Range too large');
+    let r = isSum ? 0 : 1;
+    for(let i = L; i <= H; i++){ const x = run(d+1, {...e, [v.n]: i}); r = isSum ? r + x : r * x; }
+    return r;
+  };
+  return run(0, env);
+}
+
+function ev(n, env){
+  switch(n.k){
+    case 'num': return n.v;
+    case 'var':
+      if(env[n.n] === undefined || env[n.n] === null) throw Error('Variable ' + n.n + ' has no value. Set it in the Variables panel.');
+      return env[n.n];
+    case 'neg': return -ev(n.a, env);
+    case 'fact': return factorial(ev(n.a, env));
+    case 'bin': {
+      const a = ev(n.l, env), b = ev(n.r, env);
+      switch(n.o){
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': if(b === 0) throw Error('Cannot divide by zero'); return a / b;
+        case '%': if(b === 0) throw Error('Modulo by zero'); return a % b;
+        case '//': if(b === 0) throw Error('Cannot divide by zero'); return Math.floor(a / b);
+        case '^': { const r = Math.pow(a, b); if(Number.isNaN(r)) throw Error('Result is not a real number'); return r; }
+      }
+    }
+    case 'fn': {
+      const N = n.n;
+      if(N==='sum') return aggregate(n.a, env, true, false);
+      if(N==='prod') return aggregate(n.a, env, false, false);
+      if(N==='dsum') return aggregate(n.a, env, true, true);
+      if(N==='dprod') return aggregate(n.a, env, false, true);
+      const x = ev(n.a[0], env);
+      switch(N){
+        case 'sqrt': if(x < 0) throw Error('Square root of a negative number'); return Math.sqrt(x);
+        case 'cbrt': return Math.cbrt(x);
+        case 'log': if(x <= 0) throw Error('log needs a value > 0'); return Math.log10(x);
+        case 'lb': if(x <= 0) throw Error('log₂ needs a value > 0'); return Math.log2(x);
+        case 'ln': if(x <= 0) throw Error('ln needs a value > 0'); return Math.log(x);
+        case 'floor': return Math.floor(x);
+        case 'ceil': return Math.ceil(x);
+        case 'abs': return Math.abs(x);
+        case 'idiv': { const y = ev(n.a[1], env); if(y === 0) throw Error('Cannot divide by zero'); return Math.floor(x / y); }
+        case 'mod': { const y = ev(n.a[1], env); if(y === 0) throw Error('Modulo by zero'); return x % y; }
+      }
+    }
+  }
+}
+
+function fmt(x){
+  if(!Number.isFinite(x)) throw Error('Result is too large or undefined');
+  if(Number.isInteger(x) && Math.abs(x) < 1e15) return String(x);
+  const v = parseFloat(x.toPrecision(12));           // removes float noise such as 0.1+0.2
+  if(Math.abs(v) >= 1e15 || (v !== 0 && Math.abs(v) < 1e-9)) return v.toExponential(8).replace(/\.?0+e/, 'e');
+  return String(v);
+}
+
+function pretty(s){
+  return s.replace(/\*/g,'×').replace(/\//g,'÷').replace(/\/\/|÷÷/g,'//')
+          .replace(/\bsum\(/gi,'Σ(').replace(/\bprod\(/gi,'Π(').replace(/\bdsum\(/gi,'ΣΣ(').replace(/\bdprod\(/gi,'ΠΠ(')
+          .replace(/\bsqrt\(/gi,'√(').replace(/\bcbrt\(/gi,'∛(').replace(/\blog2\(/gi,'log₂(');
+}
+
+/* ================= UI ================= */
+const $ = id => document.getElementById(id);
+const disp = $('inp'), prev = $('prev'), VARS = ['A','B','C','D','X','Y'];
+let expr = '', done = false, last = '', adv = false;
+const hist = [];
+const ICON_SCI = '<span>√π<br>e=</span>', ICON_BASIC = '<span>+−<br>×=</span>';
+function setMode(a){                          // false = basic keypad, true = advanced keypad
+  adv = a;
+  document.querySelector('main').classList.toggle('basic', !a);
+  $('sci').hidden = !a;
+  $('modeBtn').innerHTML = a ? ICON_BASIC : ICON_SCI;
+  $('modeBtn').setAttribute('aria-label', a ? 'Switch to basic calculator' : 'Switch to advanced calculator');
+}
+
+$('vars').innerHTML = VARS.map(v => `<label>${v}<input id="v${v}" type="number" step="any" placeholder="—"></label>`).join('');
+const getEnv = () => { const e = {}; VARS.forEach(v => { const s = $('v'+v).value; e[v] = s === '' ? null : Number(s); }); return e; };
+
+function renderHist(){
+  const box = $('hlist'); box.textContent = '';
+  if(!hist.length){ const d = document.createElement('div'); d.className = 'hempty'; d.textContent = 'No history yet'; box.appendChild(d); return; }
+  hist.forEach(h => {
+    const d = document.createElement('div'); d.className = 'hitem';
+    const f = document.createElement('small'), r = document.createElement('b');
+    f.textContent = h.shown; r.textContent = h.res; d.append(f, r);
+    d.onclick = () => { expr = h.text; done = false; setPrev(''); render(); setHist(false); };
+    box.appendChild(d);
+  });
+}
+function setHist(open){
+  document.querySelector('main').classList.toggle('histopen', open);
+  document.querySelector('.pads').hidden = open;
+  $('histView').hidden = !open;
+  $('histBtn').classList.toggle('on', open);
+  if(open) renderHist();
+}
+function render(){
+  const t = done ? last : (expr === '' ? '0' : pretty(expr));
+  disp.textContent = t;
+  disp.style.fontSize = t.length > 16 ? '30px' : t.length > 11 ? '40px' : t.length > 7 ? '52px' : '';
+  disp.scrollLeft = disp.scrollWidth;
+}
+function setPrev(text, isErr){ prev.textContent = text; prev.classList.toggle('err', !!isErr); prev.scrollLeft = prev.scrollWidth; }
+
+function add(str){
+  if(done){                                  // after "=": an operator continues from the answer, anything else starts fresh
+    expr = /^(\/\/|[+\-*\/%^!])$/.test(str) ? last + str : str;
+    done = false;
+  } else expr += str;
+  setPrev(''); render();
+}
+function back(){ if(done) done = false; expr = expr.slice(0,-1); setPrev(''); render(); }
+function clearAll(){ expr = ''; last = ''; done = false; setPrev(''); render(); }
+
+function calculate(){
+  const text = expr.trim();
+  if(!text) return;
+  try{
+    const m = text.match(/^([a-z])\s*=\s*([^=].*)$/i);      // assignment, e.g. A=5 or A=2+3
+    let shown, res;
+    if(m){
+      const name = m[1].toUpperCase();
+      if(!VARS.includes(name)) throw Error('Variables available: ' + VARS.join(', '));
+      res = fmt(ev(parse(tokenize(m[2])), getEnv()));
+      $('v'+name).value = res; shown = name + ' = ' + pretty(m[2].trim());
+    } else {
+      res = fmt(ev(parse(tokenize(text)), getEnv())); shown = pretty(text);
+    }
+    last = res; done = true; setPrev(shown); render();
+    hist.unshift({text, shown, res}); if(hist.length > 100) hist.pop(); if(!$('histView').hidden) renderHist();
+  }catch(e){ done = false; setPrev(e.message, true); render(); }
+}
+
+// [label, text to insert, css class]
+const MAIN = [
+  [['AC','CLR','top'],['⌫','BS','top'],['%','%','top'],['÷','/','op']],
+  [['7','7'],['8','8'],['9','9'],['×','*','op']],
+  [['4','4'],['5','5'],['6','6'],['−','-','op']],
+  [['1','1'],['2','2'],['3','3'],['+','+','op']],
+  [['','MODE','mode'],['0','0'],['.','.'],['=','EQ','op']]
+];
+const SCI = [
+  [['(','('],[')',')'],[',',','],['xʸ','^'],['n!','!']],
+  [['√','sqrt('],['∛','cbrt('],['log','log('],['log₂','log2('],['ln','ln(']],
+  [['floor','floor('],['ceil','ceil('],['abs','abs('],['idiv','idiv('],['mod','mod(']],
+  [['//','//'],['Σ','sum(i,1,5,i)'],['ΣΣ','dsum(i,1,3,j,1,3,i*j)'],['Π','prod(i,1,4,i)'],['ΠΠ','dprod(i,1,3,j,1,3,i+j)']],
+  [['A','A'],['B','B'],['C','C'],['D','D'],['X','X']],
+  [['Y','Y'],['i','i'],['j','j'],['set','=']]
+];
+const draw = (rows, base) => rows.flat().map(k =>
+  `<button class="${base} ${k[2]||''}" data-i="${k[1].replace(/"/g,'&quot;')}">${k[0]}</button>`).join('');
+$('main').innerHTML = draw(MAIN, 'k');
+$('sci').innerHTML = draw(SCI, 's');
+document.querySelector('[data-i="MODE"]').id = 'modeBtn';
+setMode(false);
+
+function press(e){
+  const b = e.target.closest('button'); if(!b) return;
+  const v = b.dataset.i;
+  if(v === 'CLR') clearAll(); else if(v === 'BS') back(); else if(v === 'EQ') calculate(); else if(v === 'MODE') setMode(!adv); else if(v === 'HBACK') setHist(false); else if(v === 'HCLR'){ hist.length = 0; renderHist(); } else add(v);
+}
+$('main').addEventListener('click', press);
+$('sci').addEventListener('click', press);
+$('histView').addEventListener('click', press);
+$('histBtn').onclick = () => setHist($('histView').hidden);
+
+// Physical keyboard: only calculator keys are accepted (digits, operators, A-D, X, Y, i, j)
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT' || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key; let ok = true;
+  const okKey = adv ? /^[0-9.+\-*\/%^!(),=]$/ : /^[0-9.+\-*\/%]$/;
+  if(okKey.test(k)) add(k);
+  else if(adv && /^[abcdxyij]$/i.test(k)) add(k.toUpperCase());
+  else if(k === 'Enter') calculate();
+  else if(k === 'Backspace') back();
+  else if(k === 'Escape' || k === 'Delete') clearAll();
+  else ok = false;
+  if(ok) e.preventDefault();
+});
+
+$('theme').onclick = () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light';
+};
+</script>
+</body>
+</html>
